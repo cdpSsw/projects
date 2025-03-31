@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  node-server:
+    container_name: node-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: db
+      DB_USER: admin
+      DB_PASSWORD: root
+      DB_NAME: project
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    container_name: db
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: project
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: always
+
+  
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: admin
+      PMA_PASSWORD: root
+      PMA_PORT: 3306
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  db-data:
+    driver: local
+
+    
